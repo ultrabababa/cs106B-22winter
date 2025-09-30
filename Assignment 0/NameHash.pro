@@ -6,7 +6,9 @@
 #   build client program using installed static library
 ###############################################################################
 
-SPL_VERSION = 2021.1
+# as the project cs106 installed the 2025.1 version,
+# so i change this SPL_VERSION from 2021.1 to 2025.1
+SPL_VERSION = 2025.1
 SPL_URL = https://web.stanford.edu/dept/cs_edu/qt
 
 TEMPLATE    =   app
