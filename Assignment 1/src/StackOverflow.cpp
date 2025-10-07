@@ -2,11 +2,19 @@
  *
  * Q1: What do you see when you trigger a stack overflow when running the program
  *     without the debugger enabled? Write your answer below.
- *
+ *     D:\study\lectures\cs106b\cs106b-22win\Assignment 1\src\StackOverflow.cpp:62: warning: infinite recursion detected [-Winfinite-recursion]
+..\..\src\StackOverflow.cpp: In function 'void triggerStackOverflow(int)':
+..\..\src\StackOverflow.cpp:62:6: warning: infinite recursion detected [-Winfinite-recursion]
+   62 | void triggerStackOverflow(int index) {
+      |      ^~~~~~~~~~~~~~~~~~~~
+..\..\src\StackOverflow.cpp:63:25: note: recursive call
+   63 |     triggerStackOverflow(kGotoTable[index]);
+      |     ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
  *
  *
  * Q2: What is the sequence of values that repeats in the stack overflow? Write your
  *     answer below.
+ *    137 164 685 203 327 549
  */
 #include "StackOverflow.h"
 

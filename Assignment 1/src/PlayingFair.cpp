@@ -9,14 +9,28 @@ using namespace std;
 
 string aSequenceOfOrder(int n) {
     /* TODO: Delete this line and the next two lines, then implement this function. */
-    (void) n;
-    return "";
+    if (n < 0) {
+        error("n should be non negative!");
+    }
+
+    if (n == 0) {
+        return "A";
+    }
+
+    return aSequenceOfOrder(n - 1) + bSequenceOfOrder(n - 1);
 }
 
 string bSequenceOfOrder(int n) {
     /* TODO: Delete this line and the next two lines, then implement this function. */
-    (void) n;
-    return "";
+    if (n < 0) {
+        error("n should be non negative!");
+    }
+
+    if (n == 0) {
+        return "B";
+    }
+
+    return bSequenceOfOrder(n - 1) + aSequenceOfOrder(n - 1);
 }
 
 
@@ -60,6 +74,15 @@ PROVIDED_TEST("Triggers error on negative inputs.") {
      */
     EXPECT_ERROR(aSequenceOfOrder(-137));
     EXPECT_ERROR(bSequenceOfOrder(-137));
+}
+
+STUDENT_TEST("Sequences of order 0, 1 and 2.") {
+    EXPECT_EQUAL(aSequenceOfOrder(0), "A");
+    EXPECT_EQUAL(bSequenceOfOrder(0), "B");
+    EXPECT_EQUAL(aSequenceOfOrder(1), "AB");
+    EXPECT_EQUAL(bSequenceOfOrder(1), "BA");
+    EXPECT_EQUAL(aSequenceOfOrder(2), "ABBA");
+    EXPECT_EQUAL(bSequenceOfOrder(2), "BAAB");
 }
 
 /* TODO: You will need to add your own tests into this suite of test cases. Think about the sorts

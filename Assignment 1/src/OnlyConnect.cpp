@@ -8,12 +8,33 @@
 #include "GUI/SimpleTest.h"
 using namespace std;
 
+string convertChar(char c) {
+    if (!isalpha(c)) {
+        return "";
+    }
+
+    c = toUpperCase(c);
+    string vowels = "AEIOU";
+    if (vowels.find(c) != string::npos) {
+        return "";
+    }
+
+    return charToString(c);
+}
+
 string onlyConnectize(string phrase) {
     /* TODO: The next few lines just exist to make sure you don't get compiler warning messages
      * when this function isn't implemented. Delete these lines, then implement this function.
      */
-    (void) phrase;
-    return "";
+    if (phrase.length() == 0) {
+        return "";
+    }
+
+    if (phrase.length() == 1) {
+        return convertChar(phrase[0]);
+    }
+
+    return convertChar(phrase[0]) + onlyConnectize(phrase.substr(1));
 }
 
 
@@ -37,6 +58,10 @@ PROVIDED_TEST("Handles single-character inputs.") {
     EXPECT_EQUAL(onlyConnectize("A"), "");
     EXPECT_EQUAL(onlyConnectize("+"), "");
     EXPECT_EQUAL(onlyConnectize("Q"), "Q");
+}
+
+STUDENT_TEST("Handles empty inputs.") {
+    EXPECT_EQUAL(onlyConnectize(""), "");
 }
 
 /* TODO: You will need to add your own tests into this suite of test cases. Think about the sorts
