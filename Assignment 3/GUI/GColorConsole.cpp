@@ -76,7 +76,7 @@ void GColorConsole::updateDisplay() {
     for (const auto& line: mContents) {
         /* Introduce the style. */
         toShow << "<span style=\"";
-        toShow << "color:" << line.first.color.toHTML() << ";";
+        toShow << "color:" << line.first.color << ";";
         if (line.first.fontStyle & BOLD)   toShow << "font-weight:bold;";
         if (line.first.fontStyle & ITALIC) toShow << "font-style:italic;";
         toShow << "font-size:" << line.first.fontSize.size() << "pt;";
@@ -94,12 +94,12 @@ void GColorConsole::updateDisplay() {
 
     /* Change text contents and scroll down. */
     GThread::runOnQtGuiThread([&, this] {
-        setText(toShow.str());
+        readTextFromFile(toShow);
         scrollToBottom();
     });
 }
 
-void GColorConsole::setStyle(MiniGUI::Color color, FontStyle style, FontSize size) {
+void GColorConsole::setStyle(const string& color, FontStyle style, FontSize size) {
     flushBuffer();
     mStyle.color = color;
     mStyle.fontStyle = style;
@@ -109,14 +109,14 @@ void GColorConsole::setStyle(MiniGUI::Color color, FontStyle style, FontSize siz
 GColorConsole::FontStyle GColorConsole::style() const {
     return mStyle.fontStyle;
 }
-MiniGUI::Color GColorConsole::color() const {
+string GColorConsole::color() const {
     return mStyle.color;
 }
 FontSize GColorConsole::fontSize() const {
     return mStyle.fontSize;
 }
 
-void GColorConsole::doWithStyle(MiniGUI::Color newColor, FontStyle newStyle, FontSize newSize, std::function<void ()> fn) {
+void GColorConsole::doWithStyle(const string& newColor, FontStyle newStyle, FontSize newSize, std::function<void ()> fn) {
     auto oldColor = color();
     auto oldStyle = style();
     auto oldSize  = fontSize();
@@ -135,11 +135,11 @@ void GColorConsole::doWithStyle(MiniGUI::Color newColor, FontStyle newStyle, Fon
     setStyle(oldColor, oldStyle, oldSize);
 }
 
-void GColorConsole::doWithStyle(MiniGUI::Color color, FontStyle style, std::function<void ()> fn) {
+void GColorConsole::doWithStyle(const string& color, FontStyle style, std::function<void ()> fn) {
     doWithStyle(color, style, fontSize(), fn);
 }
 
-void GColorConsole::doWithStyle(MiniGUI::Color color, std::function<void ()> fn) {
+void GColorConsole::doWithStyle(const string& color, std::function<void ()> fn) {
     doWithStyle(color, style(), fontSize(), fn);
 }
 
@@ -150,7 +150,7 @@ void GColorConsole::doWithStyle(FontStyle style, std::function<void ()> fn) {
 void GColorConsole::doWithStyle(FontStyle style, FontSize size, std::function<void()> fn) {
     doWithStyle(color(), style, size, fn);
 }
-void GColorConsole::doWithStyle(MiniGUI::Color color, FontSize size, std::function<void()> fn) {
+void GColorConsole::doWithStyle(const std::string& color, FontSize size, std::function<void()> fn) {
     doWithStyle(color, style(), size, fn);
 }
 void GColorConsole::doWithStyle(FontSize size, std::function<void()> fn) {

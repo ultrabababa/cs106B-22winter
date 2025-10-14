@@ -132,12 +132,7 @@ namespace SimpleTest{
         /* Convert from raw tests to a proper list of test groups. */
         Vector<TestGroup> displayedTests;
         for (const auto& entry: Internal::rawTests()) {
-            auto tests = testsToGroup(entry, filter);
-
-            /* Edge Case: No tests in a file? Don't display it. */
-            if (!tests.tests.isEmpty()) {
-                displayedTests += tests;
-            }
+            displayedTests += testsToGroup(entry, filter);
         }
 
         /* Sort the groups. */

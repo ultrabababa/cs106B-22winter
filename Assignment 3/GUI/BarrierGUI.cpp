@@ -6,14 +6,14 @@ using namespace std;
 using namespace MiniGUI;
 
 namespace {
-    const Color kTestRunningColor = Color::WHITE();
-    const Color kTestFailedColor  = Color(128, 0, 0);
+    const string kTestRunningColor = "white";
+    const string kTestFailedColor  = "#800000";
 
-    const Font kTestRunningFont(FontFamily::SERIF, FontStyle::ITALIC, 24, Color::BLUE());
-    const Font kTestFailedFont (FontFamily::SERIF, FontStyle::ITALIC, 24, Color::WHITE());
+    const Font kTestRunningFont(FontFamily::SERIF, FontStyle::ITALIC, 24, "blue");
+    const Font kTestFailedFont (FontFamily::SERIF, FontStyle::ITALIC, 24, "white");
 
     const string kTestRunningMessage = "Running tests in %s...";
-    const string kTestFailedMessage  = "Tests failed in %s. Select the \"Run Tests\" option to see which tests failed.";
+    const string kTestFailedMessage  = "Tests failed in %s. Correct any errors in those tests and select this option again.";
 
     const double kPadding = 20;
 

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GColorConsole_Included
+#define GColorConsole_Included
 
 #include <sstream>
 #include <string>
@@ -7,7 +8,6 @@
 #include <functional>
 #include <memory>
 #include "gbrowserpane.h"
-#include "Color.h"
 
 /* Type representing a font size. */
 class FontSize {
@@ -40,10 +40,10 @@ public:
     };
 
     /* Styling. */
-    void setStyle(MiniGUI::Color color = MiniGUI::Color::BLACK(),
+    void setStyle(const std::string& color = "black",
                   FontStyle style = NORMAL,
                   FontSize  size = FontSize{});
-    MiniGUI::Color color() const;
+    std::string color() const;
     FontStyle style() const;
     FontSize  fontSize() const;
 
@@ -56,12 +56,12 @@ public:
      * to the indicated values. This is useful if, say, you want to temporarily
      * change the color or font style.
      */
-    void doWithStyle(MiniGUI::Color color, FontStyle style, std::function<void()> fn);
-    void doWithStyle(MiniGUI::Color color, FontStyle style, FontSize size, std::function<void()> fn);
+    void doWithStyle(const std::string& color, FontStyle style, std::function<void()> fn);
+    void doWithStyle(const std::string& color, FontStyle style, FontSize size, std::function<void()> fn);
     void doWithStyle(FontStyle style, FontSize size, std::function<void()> fn);
-    void doWithStyle(MiniGUI::Color color, FontSize size, std::function<void()> fn);
+    void doWithStyle(const std::string& color, FontSize size, std::function<void()> fn);
     void doWithStyle(FontSize size, std::function<void()> fn);
-    void doWithStyle(MiniGUI::Color color, std::function<void()> fn);
+    void doWithStyle(const std::string& color, std::function<void()> fn);
     void doWithStyle(FontStyle style, std::function<void()> fn);
 
 private:
@@ -88,9 +88,9 @@ private:
 
     /* Blocks of text rendered so far, each tagged with a style. */
     struct Style {
-        MiniGUI::Color color     = MiniGUI::Color::BLACK();
-        FontStyle      fontStyle = NORMAL;
-        FontSize       fontSize  = FontSize{};
+        std::string color = "black";
+        FontStyle   fontStyle = NORMAL;
+        FontSize    fontSize = FontSize{};
     };
 
     Style mStyle;
@@ -101,3 +101,5 @@ private:
     GColorConsole(GColorConsole &&) = delete;
     void operator= (GColorConsole) = delete;
 };
+
+#endif

@@ -1,5 +1,5 @@
 #include "Font.h"
-#include "error.h"
+#include "map.h"
 using namespace std;
 
 namespace {
@@ -104,11 +104,11 @@ namespace MiniGUI {
     Font::Font() : mFamily(FontFamily::SANS_SERIF),
                    mStyle(FontStyle::NORMAL),
                    mSize(13),
-                   mColor(Color::BLACK()) {
+                   mColor("black") {
         // Handled in initialization list.
     }
 
-    Font::Font(FontFamily family, FontStyle style, int size, Color color)
+    Font::Font(FontFamily family, FontStyle style, int size, const string& color)
         : mFamily(family), mStyle(style), mSize(size), mColor(color) {
         // Handled in initialization list.
     }
@@ -140,10 +140,10 @@ namespace MiniGUI {
         return result;
     }
 
-    Color Font::color() const {
+    string Font::color() const {
         return mColor;
     }
-    Font Font::color(Color color) const {
+    Font Font::color(const string& color) const {
         auto result = *this;
         result.mColor = color;
         return result;

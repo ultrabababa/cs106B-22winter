@@ -17,7 +17,7 @@ namespace MiniGUI {
         GWindow& graphicsWindow();
 
         /* Graphical main loop. */
-        [[ noreturn ]] void graphicsMain(std::function<void()> initialDemo);
+        void graphicsMain(std::function<void()> initialDemo);
     }
 }
 

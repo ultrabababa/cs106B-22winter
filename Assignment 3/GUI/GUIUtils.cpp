@@ -1,5 +1,5 @@
 #include "GUIUtils.h"
-#include "gobjects.h"
+#include "strlib.h"
 #include "filelib.h"
 #include <sstream>
 #include <vector>
@@ -201,7 +201,7 @@ void TextRender::draw(GWindow& window) {
 void TextRender::draw(GCanvas* canvas) {
     GText label;
     label.setFont(mComputedFont.stanfordCPPLibFontString());
-    label.setColor(mComputedFont.color().toRGB());
+    label.setColor(mComputedFont.color());
 
     for (const auto& line: mLines) {
         label.setLocation(line.baseline);
@@ -266,23 +266,6 @@ void TextRender::alignTop() {
     };
 }
 
-void TextRender::alignBottom() {
-    /* Determine the delta to apply to each line by looking at the computed
-     * bounds. Specifically, we want to shift everything so that its final
-     * bottom position is mBounds.y + mBounds.height, so we need to measure
-     * the bottom of the computed bounds to that point.
-     */
-    double deltaY = (mBounds.y + mBounds.height) - (mComputedBounds.y + mComputedBounds.height);
-
-    /* Push everything by this delta. */
-    for (auto& line: mLines) {
-        line.baseline.y += deltaY;
-    }
-
-    /* Update the computed bounds so that we're flush on the bottom. */
-    mComputedBounds.y += deltaY;
-}
-
 void TextRender::alignCenterVertically() {
     /* Figure out where the new computed bounds should start. */
     double newY = mBounds.y + (mBounds.height - mComputedBounds.height) / 2.0;
@@ -317,11 +300,11 @@ namespace {
 }
 
 shared_ptr<LegendRender> LegendRender::construct(const vector<string>& strings,
-                                                 const vector<MiniGUI::Color>& colors,
+                                                 const vector<string>& colors,
                                                  const GRectangle& bounds,
-                                                 const vector<MiniGUI::Color>& textColors,
+                                                 const vector<string>& textColors,
                                                  const MiniGUI::Font& font,
-                                                 MiniGUI::Color borderColor,
+                                                 const string& borderColor,
                                                  LineBreak breakMode) {
     /* Validate input. */
     if (strings.size() > colors.size()) error("Not enough colors to draw legend.");
@@ -390,12 +373,12 @@ shared_ptr<LegendRender> LegendRender::construct(const vector<string>& strings,
 }
 
 shared_ptr<LegendRender> LegendRender::construct(const vector<string>& strings,
-                                                 const vector<MiniGUI::Color>& colors,
+                                                 const vector<string>& colors,
                                                  const GRectangle& bounds,
                                                  const MiniGUI::Font& font,
-                                                 MiniGUI::Color borderColor,
+                                                 const string& borderColor,
                                                  LineBreak breakMode) {
-    return construct(strings, colors, bounds, vector<MiniGUI::Color>(strings.size(), font.color()), font, borderColor, breakMode);
+    return construct(strings, colors, bounds, vector<string>(strings.size(), font.color()), font, borderColor, breakMode);
 }
 
 void LegendRender::draw(GWindow& window) {
@@ -404,7 +387,7 @@ void LegendRender::draw(GWindow& window) {
         mLines[i]->draw(window);
 
         /* Draw the bullet, vertically-centered. */
-        window.setColor(mBulletColors[i].toRGB());
+        window.setColor(mBulletColors[i]);
         GRectangle bullet = {
             mComputedBounds.x + kBulletPadding,
             mLines[i]->computedBounds().y + mLines[i]->computedBounds().height / 2.0 - kBulletSize / 2.0,
@@ -415,7 +398,7 @@ void LegendRender::draw(GWindow& window) {
     }
 
     /* Draw the overall bounding box. */
-    window.setColor(mBorderColor.toRGB());
+    window.setColor(mBorderColor);
     window.drawRect(mComputedBounds);
 }
 
@@ -525,8 +508,8 @@ LineGraphRender::construct(const vector<vector<GPoint>>& lines,
                            const GRectangle& bounds,
                            const MiniGUI::Font& xLabelFont,
                            const MiniGUI::Font& yLabelFont,
-                           const vector<MiniGUI::Color>& lineColors,
-                           MiniGUI::Color axisColor) {
+                           const vector<string>& lineColors,
+                           const string& axisColor) {
     /* Boundary case: We can't draw a line graph if we don't have at least two ticks
      * in each of the X and Y directions.
      */
@@ -576,13 +559,13 @@ LineGraphRender::construct(const vector<vector<GPoint>>& lines,
 void LineGraphRender::drawYAxis(GWindow& window) const {
     /* Draw the axis line. */
     GLine axisLine(mOrigin, mYEnd);
-    axisLine.setColor(mAxisColor.toRGB());
+    axisLine.setColor(mAxisColor);
     axisLine.setLineWidth(kAxisLineWidth);
     window.draw(&axisLine);
 
     /* Draw tick marks. */
     GText tickLabel("");
-    tickLabel.setColor(mAxisColor.toRGB());
+    tickLabel.setColor(mAxisColor);
     tickLabel.setFont(mYLabelFont.stanfordCPPLibFontString());
 
     /* Useful constants. */
@@ -593,7 +576,7 @@ void LineGraphRender::drawYAxis(GWindow& window) const {
         /* Major tick mark. */
         double y = mOrigin.y - i * spacing;
         double x = mOrigin.x;
-        window.setColor(mAxisColor.toRGB());
+        window.setColor(mAxisColor);
         window.drawLine(x - kLargeTickSize / 2.0, y, x + kLargeTickSize / 2.0, y);
 
         /* Tick mark label. */
@@ -616,13 +599,13 @@ void LineGraphRender::drawYAxis(GWindow& window) const {
 void LineGraphRender::drawXAxis(GWindow& window) const {
     /* Draw the axis line. */
     GLine axisLine(mOrigin, mXEnd);
-    axisLine.setColor(mAxisColor.toRGB());
+    axisLine.setColor(mAxisColor);
     axisLine.setLineWidth(kAxisLineWidth);
     window.draw(&axisLine);
 
     /* Draw tick marks. */
     GText tickLabel("");
-    tickLabel.setColor(mAxisColor.toRGB());
+    tickLabel.setColor(mAxisColor);
     tickLabel.setFont(mXLabelFont.stanfordCPPLibFontString());
 
     /* Useful constants. */
@@ -633,7 +616,7 @@ void LineGraphRender::drawXAxis(GWindow& window) const {
         double x = mOrigin.x + i * spacing;
         double y = mOrigin.y;
 
-        window.setColor(mAxisColor.toRGB());
+        window.setColor(mAxisColor);
         window.drawLine(x, y - kLargeTickSize / 2.0, x, y + kLargeTickSize / 2.0);
 
         /* Tick mark label. */
@@ -658,7 +641,7 @@ void LineGraphRender::drawLines(GWindow& window) const {
     for (size_t j = mLines.size(); j > 0; --j) {
         GLine line(0, 0, 0, 0);
         line.setLineWidth(kPlottedLineWidth);
-        line.setColor(mLineColors[j - 1].toRGB());
+        line.setColor(mLineColors[j - 1]);
 
         for (size_t i = 0; i + 1 < mLines[j - 1].size(); i++) {
             auto src = mLines[j - 1][i];
@@ -687,11 +670,11 @@ void LineGraphRender::draw(GWindow& window) {
 /*******  Helpers   ********/
 /***************************/
 
-void clearDisplay(GWindow& window, MiniGUI::Color backgroundColor) {
+void clearDisplay(GWindow& window, const std::string& backgroundColor) {
     clearDisplay(window.getCanvas(), backgroundColor);
 }
-void clearDisplay(GCanvas* canvas, MiniGUI::Color backgroundColor) {
-    canvas->setColor(backgroundColor.toRGB());
+void clearDisplay(GCanvas* canvas, const std::string& backgroundColor) {
+    canvas->setColor(backgroundColor);
     canvas->fillRect({ 0, 0, canvas->getWidth(), canvas->getHeight() });
 }
 
@@ -788,11 +771,6 @@ GComboBox* makeFileSelector(const string& baseDir, const string& defaultOption,
 
 /* Fit bounds to aspect ratio. */
 GRectangle fitToBounds(const GRectangle& bounds, double aspectRatio) {
-    /* If the rectangle has negative size, clip to 0x0. */
-    if (bounds.width <= 0 || bounds.height <= 0) {
-        return { bounds.x, bounds.y, 0, 0 };
-    }
-
     double width, height;
 
     /* Too narrow? */

@@ -85,15 +85,7 @@
  */
 #define ALLOW_TEST_ACCESS() /* Something internal you shouldn't worry about. */
 
-/* Times a block of code, reporting a test failure if it takes too long. You
- * must enclose the full block of code in the EXPECT_COMPLETES_IN call, as
- * shown here:
- *
- *    EXPECT_COMPLETES_IN(3.0, {
- *       .. code that must complete in 3 seconds
- *    });
- */
-#define EXPECT_COMPLETES_IN(timeLimit, code) /* Something internal you shouldn't worry about. */
+
 
 
 
@@ -118,7 +110,6 @@
 
 #include "TextUtils.h"
 #include "TestDriver.h"
-#include "Timer.h"
 #include "error.h"
 #include <string>
 #include <sstream>
@@ -216,13 +207,13 @@ namespace SimpleTest {
         [[ noreturn ]] void doFail(const std::string &message, std::size_t line);
 
         #undef EXPECT
-        #define EXPECT(...) SimpleTest::Internal::doExpect(__VA_ARGS__, "EXPECT failed: " #__VA_ARGS__ " is not true.", __LINE__)
+        #define EXPECT(condition) SimpleTest::Internal::doExpect(condition, "EXPECT failed: " #condition " is not true.", __LINE__)
         void doExpect(bool condition, const std::string& expression, std::size_t line);
 
         #undef EXPECT_ERROR
         #define EXPECT_ERROR(condition) do {\
             try {\
-                condition; \
+                (void)(condition); \
                 SimpleTest::Internal::doFail("EXPECT_ERROR: " #condition " did not call error().", __LINE__); \
             } catch (const ErrorException& ) { \
                 /* Do nothing. */ \
@@ -331,22 +322,6 @@ namespace SimpleTest {
             return s.length() < maxLen ? s : s.substr(0, maxLen) + " ...";
         }
 
-        /* Returns a string showing the evaluation of the given expression. This is used to
-         * avoid printing out redundant information of a literal equalling itself.
-         */
-        template <typename T> std::string evaluate(const std::string& orig, const T& answer)  {
-            std::string evaluated = abbreviate(debugFriendlyString(answer));
-
-            /* If the original string input matches what the evaluated version looks like,
-             * no need to print anything.
-             */
-            if (orig == evaluated) {
-                return "";
-            } else {
-                return "                " + orig  + " = " + evaluated;
-            }
-        }
-
         #undef EXPECT_EQUAL
         #define EXPECT_EQUAL(student, ...) DO_COMPOUND_EXPECT("EXPECT_EQUAL", "!=", SimpleTest::Internal::areEqual, student, __VA_ARGS__)
 
@@ -374,8 +349,10 @@ namespace SimpleTest {
                    std::stringstream _expression;                                                   \
                    _expression << std::boolalpha << name " failed: "                                \
                                << #student << " " failSymbol " " << #__VA_ARGS__ "\n"               \
-                               << SimpleTest::Internal::evaluate(#student, _studentAnswer) << '\n'  \
-                               << SimpleTest::Internal::evaluate(#__VA_ARGS__, _referenceAnswer) << '\n';   \
+                               << "                " #student   " = "                               \
+                               << SimpleTest::Internal::abbreviate(SimpleTest::Internal::debugFriendlyString(_studentAnswer)) << '\n'\
+                               << "                " #__VA_ARGS__ " = "                             \
+                               << SimpleTest::Internal::abbreviate(SimpleTest::Internal::debugFriendlyString(_referenceAnswer));\
                    SHOW_ERROR(_expression.str()); \
                } \
             } while (0)
@@ -385,24 +362,6 @@ namespace SimpleTest {
         [[ noreturn ]] void showError(const std::string& message, std::size_t line);
 
         #undef ALLOW_TEST_ACCESS
-        #define ALLOW_TEST_ACCESS() template <const char*, int> friend void SIMPLE_TEST_CASE::testCase()
-
-        #undef EXPECT_COMPLETES_IN
-        #define EXPECT_COMPLETES_IN(limit, ...) \
-        do {\
-            double _limit = (limit); \
-            Timing::Timer _timer; \
-            _timer.start(); \
-            { \
-                __VA_ARGS__; \
-            } \
-            _timer.stop(); \
-            if (_timer.elapsed() >= _limit) { \
-                std::ostringstream _builder; \
-                _builder << "EXPECT_COMPLETES_IN: Operation took " << _timer.elapsed() << "s, exceeding limit of " << _limit << "s"; \
-                SimpleTest::Internal::showError(_builder.str(), __LINE__); \
-            }\
-        \
-        } while(0)
+        #define ALLOW_TEST_ACCESS() template <const char*, int> friend void SIMPLE_TEST_CASE::testCase();
     }
 }

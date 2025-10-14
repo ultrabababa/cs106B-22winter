@@ -1,9 +1,11 @@
 #include "GUIMain.h"
 #include "Core.h"
 #include "ProblemHandler.h"
+#include "EmptyProblemHandler.h"
 #include "gwindow.h"
 #include "gevent.h"
 #include "gbutton.h"
+#include "goptionpane.h"
 #include "gthread.h"
 #include "map.h"
 #include <chrono>

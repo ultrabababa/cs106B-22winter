@@ -57,16 +57,6 @@ std::string quotedVersionOf(const std::string& input);
 std::string quotedVersionOf(char input);
 
 /**
- * Stream manipulator that, like C++14's std::quoted, allows for extraction
- * of a quoted version of a string written with quotedVersionOf. Sets
- * ios::failbit if the read fails.
- * 
- * @param str The text string to read into.
- * @return A stream
- */
-std::string readQuotedVersionOf(std::istream& in);
-
-/**
  * Generic printf replacement. Given a string containing replacement sites of the form
  * %s and a number of arguments, replaces each of the %s sites with the appropriate
  * argument.

@@ -1,10 +1,10 @@
-#pragma once
+#ifndef GUIUtils_Included
+#define GUIUtils_Included
 
-#include "Font.h"
-#include "Color.h"
 #include "TemporaryComponent.h"
-#include "gchooser.h"
-#include "gslider.h"
+#include "Font.h"
+#include "gobjects.h"
+#include "ginteractors.h"
 #include "gwindow.h"
 #include <string>
 #include <vector>
@@ -50,7 +50,6 @@ public:
     /* Changes the vertical text alignment. */
     void alignTop();
     void alignCenterVertically();
-    void alignBottom();
 
     /* Lays out a string to fit within the specified rectangle. The text might not fill up the
      * entirety of that rectangle if it isn't long enough.
@@ -65,8 +64,8 @@ public:
 
 private:
     TextRender() = default;
-    GRectangle    mBounds{0, 0, 0, 0};         // Bounds specified by the user
-    GRectangle    mComputedBounds{0, 0, 0, 0}; // Bounds actually occupied.
+    GRectangle    mBounds;         // Bounds specified by the user
+    GRectangle    mComputedBounds; // Bounds actually occupied.
     MiniGUI::Font mFont;          // Font specified by the user
     MiniGUI::Font mComputedFont;  // Font actually used
 
@@ -105,10 +104,10 @@ public:
      * not be longer.
      */
     static std::shared_ptr<LegendRender> construct(const std::vector<std::string>& strings,
-                                                   const std::vector<MiniGUI::Color>& colors,
+                                                   const std::vector<std::string>& colors,
                                                    const GRectangle& bounds,
                                                    const MiniGUI::Font& font,
-                                                   MiniGUI::Color borderColor,
+                                                   const std::string& borderColor,
                                                    LineBreak breakMode = LineBreak::BREAK_SPACES);
 
     /* Constructs a legend render in which each text string has an assigned colors
@@ -120,20 +119,20 @@ public:
      * will change from item to item.
      */
     static std::shared_ptr<LegendRender> construct(const std::vector<std::string>& strings,
-                                                   const std::vector<MiniGUI::Color>& bulletColors,
+                                                   const std::vector<std::string>& bulletColors,
                                                    const GRectangle& bounds,
-                                                   const std::vector<MiniGUI::Color>& textColors,
+                                                   const std::vector<std::string>& textColors,
                                                    const MiniGUI::Font& font,
-                                                   MiniGUI::Color borderColor,
+                                                   const std::string& borderColor,
                                                    LineBreak breakMode = LineBreak::BREAK_SPACES);
 
 private:
     LegendRender() = default;
-    GRectangle mBounds{0, 0, 0, 0};
-    GRectangle mComputedBounds{0, 0, 0, 0};
+    GRectangle mBounds;
+    GRectangle mComputedBounds;
     std::vector<std::shared_ptr<TextRender>> mLines;
-    std::vector<MiniGUI::Color> mBulletColors;
-    MiniGUI::Color mBorderColor;
+    std::vector<std::string> mBulletColors;
+    std::string mBorderColor;
 };
 
 /* Type: LineGraphRender
@@ -168,8 +167,8 @@ public:
                                                       const GRectangle& bounds,
                                                       const MiniGUI::Font& xLabelFont,
                                                       const MiniGUI::Font& yLabelFont,
-                                                      const std::vector<MiniGUI::Color>& lineColors,
-                                                      MiniGUI::Color axisColors);
+                                                      const std::vector<std::string>& lineColors,
+                                                      const std::string& axisColors);
 
 private:
     LineGraphRender() = default;
@@ -182,14 +181,14 @@ private:
     MiniGUI::Font mXLabelFont, mYLabelFont;
 
     /* Axis parameters. */
-    MiniGUI::Color mAxisColor;
+    std::string mAxisColor;
     std::size_t mXMinorTicks, mYMinorTicks;
 
     /* The lines, in real rather than virtual space. */
     std::vector<std::vector<GPoint>> mLines;
-    std::vector<MiniGUI::Color> mLineColors;
+    std::vector<std::string> mLineColors;
 
-    GRectangle mBounds{0, 0, 0, 0};
+    GRectangle mBounds;
 
     /* Draws each component. */
     void drawXAxis(GWindow& window) const;
@@ -198,8 +197,8 @@ private:
 };
 
 /* Clears the display, resetting it to a specific color. */
-void clearDisplay(GWindow& window, MiniGUI::Color backgroundColor);
-void clearDisplay(GCanvas* canvas, MiniGUI::Color backgroundColor);
+void clearDisplay(GWindow& window, const std::string& backgroundColor);
+void clearDisplay(GCanvas* canvas, const std::string& backgroundColor);
 
 /* Given a coordinate on the Earth's surface, along with a centering coordinate, returns
  * the (x, y) coordinates at which to display that coordinate in a Mollweide projection.
@@ -226,3 +225,5 @@ GComboBox* makeFileSelector(const std::string& baseDir,
  * that (1) fits within the bounding box and (2) has that aspect ratio.
  */
 GRectangle fitToBounds(const GRectangle& bounds, double aspectRatio);
+
+#endif

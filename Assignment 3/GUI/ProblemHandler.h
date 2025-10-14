@@ -1,7 +1,6 @@
 #ifndef ProblemHandler_Included
 #define ProblemHandler_Included
 
-#include "TemporaryComponent.h"
 #include "gwindow.h"
 #include "gobjects.h"
 #include <memory>
@@ -77,20 +76,12 @@ protected:
     /* The window that we're working with. */
     GWindow& window() const;
 
-    /* Adds a new object as a temporary. */
-    void add(GInteractor* interactor, const std::string& where = "SOUTH");
-
-    /* Rectangular bounds of the canvas. */
-    GRectangle canvasBounds() const;
-
 private:
     /* Dirty bit. We're initially dirty because nothing's been drawn yet. */
     bool isDirty = true;
 
     /* Pointer to the main window. */
     GWindow* mainWindow;
-
-    std::vector<Temporary<GInteractor>> temporaries;
 };
 
 #endif

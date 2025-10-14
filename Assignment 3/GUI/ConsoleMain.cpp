@@ -1,6 +1,13 @@
 #include "Core.h"
 #include "ConsoleUtils.h"
+#include "TextUtils.h"
+#include "MemoryDiagnostics.h"
+#include "SimpleTest.h"
+#include "TestDriver.h"
+#include "error.h"
+#include "filelib.h"
 #include "simpio.h"
+#include "strlib.h"
 #include <cstdlib>
 using namespace std;
 

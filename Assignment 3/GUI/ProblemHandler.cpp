@@ -24,18 +24,6 @@ void ProblemHandler::requestRepaint() {
     isDirty = true;
 }
 
-/* Adds the object as a Temporary. */
-void ProblemHandler::add(GInteractor* interactor, const string& where) {
-    temporaries.emplace_back(interactor, window(), where);
-}
-
-/* Returns the window's drawing canvas bounds. */
-GRectangle ProblemHandler::canvasBounds() const {
-    return {
-        0, 0, window().getCanvasWidth(), window().getCanvasHeight()
-    };
-}
-
 /* Returns the stored window. */
 GWindow& ProblemHandler::window() const {
     return *mainWindow;

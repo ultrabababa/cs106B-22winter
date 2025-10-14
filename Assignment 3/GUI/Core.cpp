@@ -2,7 +2,6 @@
 #include "BarrierGUI.h"
 #include "GUIMain.h"
 #include "ConsoleMain.h"
-#include "AutograderMain.h"
 #include "EmptyProblemHandler.h"
 #include "filelib.h"
 #include <algorithm>
@@ -35,20 +34,6 @@ using namespace std;
 #else
     namespace MiniGUI::Config {
         bool isConsoleMode() {
-            return false;
-        }
-    }
-#endif
-
-#ifdef MG_AUTOGRADER_MODE
-    namespace MiniGUI::Config {
-        bool isAutograderMode() {
-            return true;
-        }
-    }
-#else
-    namespace MiniGUI::Config {
-        bool isAutograderMode() {
             return false;
         }
     }
@@ -382,8 +367,6 @@ namespace MiniGUI {
     }
 }
 
-/* Autograder mode has no demos. */
-#ifndef MG_AUTOGRADER_MODE
 namespace {
     /* The initial demo to run. For console, this defaults to the landing screen.
      * For console, this defaults to an null function.
@@ -422,12 +405,9 @@ namespace {
 
     }
 }
-#endif
 
 int main() {
-    #if defined(MG_AUTOGRADER_MODE)
-        MiniGUI::Detail::autograderMain();
-    #elif defined(MG_INTERNAL_CONSOLE_MODE)
+    #ifdef MG_INTERNAL_CONSOLE_MODE
         MiniGUI::Detail::consoleMain(initialDemo());
     #else
         MiniGUI::Detail::graphicsMain(initialDemo());

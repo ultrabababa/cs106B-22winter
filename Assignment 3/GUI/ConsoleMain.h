@@ -3,6 +3,6 @@
 
 namespace MiniGUI {
     namespace Detail {
-        [[ noreturn ]] void consoleMain(std::function<void()> initialDemo);
+        void consoleMain(std::function<void()> initialDemo);
     }
 }

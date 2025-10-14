@@ -1,10 +1,10 @@
-#include "TestingGUI.h"
 #include "ProblemHandler.h"
 #include "Core.h"
 #include "TemporaryComponent.h"
 #include "GColorConsole.h"
 #include "GUIMain.h"
 #include "TextUtils.h"
+#include "MemoryDiagnostics.h"
 #include "SimpleTest.h"
 #include "TestDriver.h"
 #include "error.h"
@@ -13,16 +13,6 @@
 using namespace std;
 
 namespace {
-    const MiniGUI::Color kPassColor      = MiniGUI::Color::fromHex(0x404040);
-    const MiniGUI::Color kWaitingColor   = MiniGUI::Color::fromHex(0xA0A0A0);
-    const MiniGUI::Color kRunningColor   = MiniGUI::Color::BLUE();
-    const MiniGUI::Color kHeaderColor    = MiniGUI::Color::fromHex(0x000080);
-    const MiniGUI::Color kTestFailColor  = MiniGUI::Color::fromHex(0x800000);
-    const MiniGUI::Color kExceptionColor = MiniGUI::Color::RED();
-    const MiniGUI::Color kLeakColor      = MiniGUI::Color::fromHex(0xCA9502);
-    const MiniGUI::Color kGroupPassColor = MiniGUI::Color::BLUE();
-    const MiniGUI::Color kGroupFailColor = MiniGUI::Color::fromHex(0x400000);
-
     /* Test type --> String */
     string to_string(SimpleTest::TestType type) {
         switch (type) {
@@ -44,24 +34,6 @@ namespace {
         /* Find the last / or \ in the filename. */
         size_t index = path.find_last_of("\\/");
         return index == string::npos ? path : path.substr(index + 1);
-    }
-
-    /* Everything is allowed. */
-    SimpleTest::TestFilter filter() {
-        return [](const string&, const SimpleTest::Test&) {
-            return true;
-        };
-    }
-
-    SimpleTest::TestGroupComparator comparator() {
-        /* Sort files by their file index. */
-        auto fileList = MiniGUI::Config::testOrder();
-
-        return [=](const string& lhs, const string& rhs) {
-            /* Compare indices of the two strings. */
-            return find(fileList.begin(), fileList.end(), lhs) <
-                   find(fileList.begin(), fileList.end(), rhs);
-        };
     }
 
     /* Retrieves all files that contain tests, i.e. all test groups */
@@ -96,16 +68,15 @@ namespace {
     }
 
     /* Returns an appropriate TestFilter given the Vector of test groups. */
-    SimpleTest::TestFilter filterToSelection(const Vector<string>& groups, int selection) {
+    SimpleTest::TestFilter getTestFilter(const Vector<string>& groups, int selection) {
         if (selection < 0) {
-            return filter();
+            return [](const string&, const SimpleTest::Test&) { return true; };
         }
 
         string selectedGroup = groups[selection];
-        auto defaultFilter = filter();
 
-        return [selectedGroup, defaultFilter](const string& group, const SimpleTest::Test& test) {
-            return group == selectedGroup && defaultFilter(group, test);
+        return [selectedGroup](const string& group, const SimpleTest::Test&) {
+            return group == selectedGroup;
         };
     }
 
@@ -117,36 +88,36 @@ namespace {
 
             for (const auto& group: testGroups) {
                 /* Draw Header */
-                console.doWithStyle(kHeaderColor, GColorConsole::BOLD, [&] {
+                console.doWithStyle("#000080", GColorConsole::BOLD, [&] {
                     console << "==== Tests for " << group.name << " ====" << '\n';
                 });
 
                 /* Draw each test */
                 for (const auto& test: group.tests) {
                     if (test.result == SimpleTest::TestResult::WAITING) {
-                        console.doWithStyle(kWaitingColor, GColorConsole::ITALIC, [&] {
+                        console.doWithStyle("#A0A0A0", GColorConsole::ITALIC, [&] {
                             console << "         " << displayNameOf(test) << '\n';
                         });
                     } else if (test.result == SimpleTest::TestResult::RUNNING) {
-                        console.doWithStyle(kRunningColor, GColorConsole::ITALIC, [&] {
+                        console.doWithStyle("#0000FF", GColorConsole::ITALIC, [&] {
                             console << "running: " << displayNameOf(test) << '\n';
                         });
                     } else if (test.result == SimpleTest::TestResult::PASS) {
-                        console.doWithStyle(kPassColor, GColorConsole::ITALIC, [&] {
+                        console.doWithStyle("#404040", GColorConsole::ITALIC, [&] {
                             console << "   pass: " << displayNameOf(test) << '\n';
                         });
                     } else if (test.result == SimpleTest::TestResult::FAIL) {
-                        console.doWithStyle(kTestFailColor, GColorConsole::BOLD, [&] {
+                        console.doWithStyle("#800000", GColorConsole::BOLD, [&] {
                             console << "   FAIL: " << displayNameOf(test) << '\n';
                             console << "    " << test.detailMessage << '\n';
                         });
                     } else if (test.result == SimpleTest::TestResult::EXCEPTION) {
-                        console.doWithStyle(kExceptionColor, GColorConsole::BOLD, [&] {
+                        console.doWithStyle("#FF0000", GColorConsole::BOLD, [&] {
                             console << "   FAIL: " << displayNameOf(test) << '\n';
                             console << "    " << test.detailMessage << '\n';
                         });
                     } else if (test.result == SimpleTest::TestResult::LEAK) {
-                        console.doWithStyle(kLeakColor, GColorConsole::BOLD, [&] {
+                        console.doWithStyle("#FF0000", GColorConsole::BOLD, [&] {
                             console << "   FAIL: " << displayNameOf(test) << '\n';
                             console << "    " << "Test defined on line " << test.lineNumber << "." << '\n';
                             console << "    " << test.detailMessage << '\n';
@@ -158,13 +129,13 @@ namespace {
 
                 /* Draw the overall result. */
                 if (group.numPassed == group.numTests && group.numTests > 0) {
-                    console.doWithStyle(kGroupPassColor, GColorConsole::ITALIC, [&] {
+                    console.doWithStyle("#0000FF", GColorConsole::ITALIC, [&] {
                         console << "All tests in this section passed!" << '\n';
                         console << '\n';
                         console << '\n';
                     });
                 } else {
-                    console.doWithStyle(kGroupFailColor, GColorConsole::BOLD, [&] {
+                    console.doWithStyle("#400000", GColorConsole::BOLD, [&] {
                         console << "Summary: " << group.numPassed << " / " << group.numTests
                              << " test" << (group.numTests == 1? "" : "s") << " passed." << '\n';
                         console << '\n';
@@ -175,6 +146,17 @@ namespace {
 
             console.flush();
         });
+    }
+
+    SimpleTest::TestGroupComparator comparator() {
+        /* Sort files by their file index. */
+        auto fileList = MiniGUI::Config::testOrder();
+
+        return [=](const string& lhs, const string& rhs) {
+            /* Compare indices of the two strings. */
+            return find(fileList.begin(), fileList.end(), lhs) <
+                   find(fileList.begin(), fileList.end(), rhs);
+        };
     }
 
     class TestingGUI: public ProblemHandler {
@@ -199,7 +181,7 @@ namespace {
             displayResults(*console, groups);
         };
 
-        SimpleTest::run(reporter, filter(), comparator());
+        SimpleTest::run(reporter, comparator());
 
         setDemoOptionsEnabled(true);
     }
@@ -209,89 +191,48 @@ GRAPHICS_HANDLER("Run Tests", GWindow& window) {
     return make_shared<TestingGUI>(window);
 }
 
-namespace {
-    /* Type that diverts a stream from its normal destination
-     * to another location. This can be used, for example, to
-     * divert stdout or stderr.
-     */
-    class OstreamDiverter {
-    public:
-        explicit OstreamDiverter(ostream& out) : original(out), diverted(out.rdbuf(replacement.rdbuf())) {
+CONSOLE_HANDLER("Run Tests") {
+    auto groups = getTestGroups();
+    int selection = getTestSelection(groups);
 
+    Vector<SimpleTest::TestGroup> lastGroups;
+    const SimpleTest::Test* running = nullptr;
+    SimpleTest::TestReporter reporter = [&](const Vector<SimpleTest::TestGroup>& groups) {
+        /* Stash the last set of groups so that we can print failures later. */
+        lastGroups = groups;
+        for (const auto& group: groups) {
+            for (const auto& test: group.tests) {
+                if (running == &test) {
+                    if (test.result == SimpleTest::TestResult::PASS) {
+                        cout << "    pass" << endl;
+                    } else if (test.result == SimpleTest::TestResult::FAIL) {
+                        cout << "    FAIL: " << test.detailMessage << endl;
+                    } else if (test.result == SimpleTest::TestResult::EXCEPTION) {
+                        cout << "    FAIL: " << test.detailMessage << endl;
+                    } else if (test.result == SimpleTest::TestResult::LEAK) {
+                        cout << "    LEAK: " << test.detailMessage << endl;
+                    } else {
+                        error("Internal error: Unknown test result?");
+                    }
+                    running = nullptr;
+                }
+                if (test.result == SimpleTest::TestResult::RUNNING) {
+                    running = &test;
+                    cout << "Running " << displayNameOf(test) << " from " << group.name << "." << endl;
+                }
+            }
         }
-
-        ~OstreamDiverter() {
-            original.rdbuf(diverted.rdbuf());
-        }
-
-        /* Access to write to the original source. */
-        ostream& out() {
-            return diverted;
-        }
-
-        /* What was written. */
-        std::string written() {
-            return replacement.str();
-        }
-
-    private:
-        ostream& original;
-        ostringstream replacement;
-        ostream  diverted;
     };
 
-    /* Runs all the tests in console mode. */
-    void runConsoleTests(SimpleTest::TestFilter filter, bool divertStreams) {
-        Vector<SimpleTest::TestGroup> lastGroups;
+    SimpleTest::run(reporter, getTestFilter(groups, selection), comparator());
 
-        {
-            /* Divert the stream if we're in autograder mode. */
-            unique_ptr<OstreamDiverter> newCout, newCerr;
-            if (divertStreams) {
-                newCout.reset(new OstreamDiverter(cout));
-                newCerr.reset(new OstreamDiverter(cerr));
-            }
+    cout << endl;
+    cout << "Test summary: " << endl;
 
-            const SimpleTest::Test* running = nullptr;
-            SimpleTest::TestReporter reporter = [&](const Vector<SimpleTest::TestGroup>& groups) {
-                /* cout may be diverted. If so, use the "real" cout. */
-                ostream& out = newCout? newCout->out() : cout;
-
-                /* Stash the last set of groups so that we can print failures later. */
-                lastGroups = groups;
-                for (const auto& group: groups) {
-                    for (const auto& test: group.tests) {
-                        if (running == &test) {
-                            if (test.result == SimpleTest::TestResult::PASS) {
-                                out << "    pass" << endl;
-                            } else if (test.result == SimpleTest::TestResult::FAIL) {
-                                out << "    FAIL: " << test.detailMessage << endl;
-                            } else if (test.result == SimpleTest::TestResult::EXCEPTION) {
-                                out << "    FAIL: " << test.detailMessage << endl;
-                            } else if (test.result == SimpleTest::TestResult::LEAK) {
-                                out << "    LEAK: " << test.detailMessage << endl;
-                            } else {
-                                error("Internal error: Unknown test result?");
-                            }
-                            running = nullptr;
-                        }
-                        if (test.result == SimpleTest::TestResult::RUNNING) {
-                            running = &test;
-                            out << "Running " << displayNameOf(test) << " from " << group.name << "." << endl;
-                        }
-                    }
-                }
-            };
-
-            SimpleTest::run(reporter, filter, comparator());
-        }
-
-        cout << endl;
-        cout << "Test summary: " << endl;
-
-        /* List all errors. */
-        int totalTests = 0, totalPassed = 0;
-        for (const auto& group: lastGroups) {
+    /* List all errors. */
+    int totalTests = 0, totalPassed = 0;
+    for (const auto& group: lastGroups) {
+        if (selection < 0 || groups[selection] == group.name) {
             totalTests  += group.numTests;
             totalPassed += group.numPassed;
 
@@ -306,33 +247,20 @@ namespace {
                 }
             }
         }
+    }
 
-        /* List error counts. */
-        for (const auto& group: lastGroups) {
+    /* List error counts. */
+    for (const auto& group: lastGroups) {
+        if (selection < 0 || groups[selection] == group.name) {
             cout << group.name << ": " << group.numPassed << " of " << pluralize(group.numTests, "test") << " passed." << endl;
         }
-
-        if (lastGroups.size() > 1) {
-            cout << "Overall: " << totalPassed << " of " << pluralize(totalTests, "test") << " passed." << endl;
-        }
-
-        if (totalTests == totalPassed) {
-            cout << "All tests passed!" << endl;
-        }
     }
-}
 
-namespace MiniGUI {
-    namespace Detail {
-        void runConsoleModeTests(SimpleTest::TestFilter filter, bool divertStreams) {
-            runConsoleTests(filter, divertStreams);
-        }
+    if (selection < 0) {
+        cout << "Overall: " << totalPassed << " of " << pluralize(totalTests, "test") << " passed." << endl;
     }
-}
 
-CONSOLE_HANDLER("Run Tests") {
-    auto groups = getTestGroups();
-    int selection = getTestSelection(groups);
-
-    runConsoleTests(filterToSelection(groups, selection), false);
+    if (totalTests == totalPassed) {
+        cout << "All tests passed!" << endl;
+    }
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include "Color.h"
 
 namespace MiniGUI {
     /* Families of available fonts. */
@@ -35,7 +34,7 @@ namespace MiniGUI {
     public:
         /* Default font settings. */
         Font();
-        Font(FontFamily family, FontStyle style, int size, Color color);
+        Font(FontFamily family, FontStyle style, int size, const std::string& color);
 
         /* Access attributes, or produce a new font with the specified property. */
         FontFamily family() const;
@@ -47,8 +46,8 @@ namespace MiniGUI {
         int size() const;
         Font size(int size) const;
 
-        Color color() const;
-        Font color(Color color) const;
+        std::string color() const;
+        Font color(const std::string& color) const;
 
         /* Raw font string, used for communication with StanfordCPPLib. This
          * is primarily for communication with other types in MiniGUI and is
@@ -60,6 +59,6 @@ namespace MiniGUI {
         FontFamily  mFamily;
         FontStyle   mStyle;
         int         mSize;
-        Color       mColor;
+        std::string mColor;
     };
 }

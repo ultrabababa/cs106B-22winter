@@ -56,9 +56,6 @@ namespace MiniGUI {
 
         /* Whether we're in console mode. */
         bool isConsoleMode();
-
-        /* Whether we're in autograder mode. */
-        bool isAutograderMode();
     }
 
     namespace Detail {

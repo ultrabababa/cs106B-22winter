@@ -1,13 +1,14 @@
 #include "EmptyProblemHandler.h"
 #include "GUIUtils.h"
+#include "gobjects.h"
 #include <string>
 using namespace std;
 using namespace MiniGUI;
 
 namespace {
     /* Graphics Constants. */
-    const Font kFont(FontFamily::SERIF, FontStyle::BOLD_ITALIC, 36, Color(0x80, 0x00, 0x80));
-    const Color kBackgroundColor = Color::fromHex(0x400040);
+    const Font kFont(FontFamily::SERIF, FontStyle::BOLD_ITALIC, 36, "#800080");
+    const string kBackgroundColor = "#400040";
 
     const string kToDisplay = "Choose which demo to run.";
 }
