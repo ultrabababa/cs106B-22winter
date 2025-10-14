@@ -6,11 +6,34 @@ using namespace std;
 Grid<bool> floodedRegionsIn(const Grid<double>& terrain,
                             const Vector<GridLocation>& sources,
                             double height) {
-    /* TODO: Delete this line and the next four lines, then implement this function. */
-    (void) terrain;
-    (void) sources;
-    (void) height;
-    return {};
+
+    Queue<GridLocation> locationQueue;
+    Grid<bool> isFlooded(terrain.numRows(), terrain.numCols(), false);
+    for (const auto& sourceLocation : sources) {
+        if (terrain.inBounds(sourceLocation) && terrain.get(sourceLocation) <= height) {
+            isFlooded.set(sourceLocation, true);
+            locationQueue.enqueue(sourceLocation);
+        }
+    }
+
+    while (!locationQueue.isEmpty()) {
+        GridLocation curr = locationQueue.dequeue();
+        int drow[] = {-1, 1, 0, 0};
+        int dcol[] = {0, 0, -1, 1};
+
+        for (int i = 0; i < 4; ++i) {
+            GridLocation neighbor = {curr.row + drow[i], curr.col + dcol[i]};
+            if (terrain.inBounds(neighbor) && !isFlooded.get(neighbor)
+                && terrain.get(neighbor) <= height) {
+
+                isFlooded.set(neighbor, true);
+                locationQueue.enqueue(neighbor);
+            }
+        }
+
+    }
+
+    return isFlooded;
 }
 
 
@@ -256,4 +279,28 @@ PROVIDED_TEST("Stress test: Handles a large, empty world quickly.") {
             EXPECT_EQUAL(water[row][col], true);
         }
     }
+}
+
+STUDENT_TEST("Source location is above water level.") {
+    Grid<double> world = {
+        { 0, 0, 0 },
+        { 0, 5, 0 }, // Source will be at (1, 1) with height 5
+        { 0, 0, 0 }
+    };
+
+    Vector<GridLocation> sources = {
+        { 1, 1 }
+    };
+
+    /* Water height is 4.0, which is below the source's height of 5.0.
+     * No water should flow from the source, and the source itself is not flooded.
+     */
+    Grid<bool> water = floodedRegionsIn(world, sources, 4.0);
+    Grid<bool> expected = {
+        { false, false, false },
+        { false, false, false },
+        { false, false, false }
+    };
+
+    EXPECT_EQUAL(water, expected);
 }

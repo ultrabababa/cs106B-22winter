@@ -2,3 +2,6 @@
 *.exe
 *.user
 */build
+*.png
+*.key
+*.download
