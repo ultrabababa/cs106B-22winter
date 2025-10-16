@@ -1,24 +1,85 @@
 #include "WhatAreYouDoing.h"
+#include <cctype>
+#include "strlib.h"
 using namespace std;
 
-/* TODO: Read the comments in WhatAreYouDoing.h to see what this function needs to do, then
- * delete this comment.
- *
- * Don't forget about the tokenize function defined in WhatAreYouDoing.h; you'll almost
- * certainly want to use it.
- */
+// 声明递归辅助函数
+void allEmphasesRec(const Vector<string>& tokens,
+                    int index,
+                    string built,
+                    Set<string>& result);
+
 Set<string> allEmphasesOf(const string& sentence) {
-    /* TODO: Delete this line and the next one, then implement this function. */
-    (void) sentence;
-    return {};
+
+    Vector<string> tokens = tokenize(sentence);
+    Set<string> result;
+    allEmphasesRec(tokens, 0, "", result);
+    return result;
+}
+
+/*
+ * 递归辅助函数，用于生成所有强调组合。
+ *
+ * tokens: 句子的词元向量。
+ * index:  当前正在处理的词元的索引。
+ * built:  到目前为止构建的字符串。
+ * result: 用于存储所有最终组合的集合。
+ */
+void allEmphasesRec(const Vector<string>& tokens,
+                    int index,
+                    string built,
+                    Set<string>& result) {
+
+    if (index == tokens.size()) {
+        result.add(built);
+        return;
+    }
+
+    string currToken = tokens[index];
+    if (!isalpha(currToken[0])) {
+        built += currToken;
+        allEmphasesRec(tokens, index + 1, built, result);
+    }
+    else {
+        allEmphasesRec(tokens, index + 1, built + toLowerCase(currToken), result);
+        allEmphasesRec(tokens, index + 1, built + toUpperCase(currToken), result);
+    }
+    return;
 }
 
 /* * * * * * Test Cases * * * * * */
 #include "GUI/SimpleTest.h"
 
-/* TODO: Add your own tests here. You know the drill - look for edge cases, think about
- * very small and very large cases, etc.
- */
+STUDENT_TEST("Test with an empty sentence.") {
+    Set<string> expected = { "" };
+    EXPECT_EQUAL(allEmphasesOf(""), expected);
+}
+
+STUDENT_TEST("Test with a sentence containing only non-words.") {
+    string sentence = "  !@#$ %^&*()  ";
+    Set<string> expected = { sentence };
+    EXPECT_EQUAL(allEmphasesOf(sentence), expected);
+}
+
+STUDENT_TEST("Test with a sentence that is already partially capitalized.") {
+    string sentence = "I think, THEREFORE I am.";
+    /* There are 5 words, so there should be 2^5 = 32 possibilities. */
+    EXPECT_EQUAL(allEmphasesOf(sentence).size(), 32);
+
+    /* Check for a few specific cases. */
+    EXPECT(allEmphasesOf(sentence).contains("i think, therefore i am."));
+    EXPECT(allEmphasesOf(sentence).contains("I THINK, THEREFORE I AM."));
+    EXPECT(allEmphasesOf(sentence).contains("i THINK, therefore i AM."));
+}
+
+STUDENT_TEST("Test with single-letter words.") {
+    string sentence = "a b c";
+    Set<string> expected = {
+        "a b c", "A b c", "a B c", "a b C",
+        "A B c", "A b C", "a B C", "A B C"
+    };
+    EXPECT_EQUAL(allEmphasesOf(sentence), expected);
+}
 
 
 

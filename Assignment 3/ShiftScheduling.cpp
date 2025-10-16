@@ -1,26 +1,68 @@
 #include "ShiftScheduling.h"
 using namespace std;
 
-/* TODO: Refer to ShiftScheduling.h for more information about what this function should do.
- * Then, delete this comment and replace it with one of your own.
- */
-Set<Shift> highestValueScheduleFor(const Set<Shift>& shifts, int maxHours) {
-    /* TODO: Delete the next few lines and implement this function. */
-    (void) shifts;
-    (void) maxHours;
-    return {};
+int totalValue(const Set<Shift>& shifts) {
+    int total = 0;
+    for (const auto &shift : shifts) {
+        total += valueOf(shift);
+    }
+    return total;
 }
 
+Set<Shift> highestValueScheduleFor(const Set<Shift>& shifts, int maxHours) {
+    if (maxHours < 0) {
+        error("max hours should be non positive!");
+    }
+
+    if (shifts.isEmpty() || maxHours == 0) {
+        return {};
+    }
+
+    // recursion steps：
+    // 1. choose a shift to make decision
+    Shift currShift = shifts.first();
+    Set<Shift> remainingShifts = shifts - currShift;
+
+    // 2. not include the shift
+    Set<Shift> withoutCurr = highestValueScheduleFor(remainingShifts, maxHours);
+
+    // 3. include the shift
+    Set<Shift> withCurr = {};
+    int time = lengthOf(currShift);
+    if (time <= maxHours) {
+        // find all the shifts without overlapping
+        Set<Shift> compatibleShifts = {};
+        for (const auto &shift : remainingShifts) {
+            if (!overlapsWith(currShift, shift)) {
+                compatibleShifts.add(shift);
+            }
+        }
+
+        withCurr = highestValueScheduleFor(compatibleShifts, maxHours - time);
+        withCurr.add(currShift);
+    }
+
+    // 4. compare the 2 decisions
+    if (totalValue(withoutCurr) < totalValue(withCurr)) {
+        return withCurr;
+    }
+    else {
+        return withoutCurr;
+    }
+}
 
 
 /* * * * * * Test Cases * * * * * */
 #include "GUI/SimpleTest.h"
 
-/* TODO: Add your own tests here. You know the drill - look for edge cases, think about
- * very small and very large cases, etc.
- */
-
-
+STUDENT_TEST("All shifts are too long to be scheduled.") {
+    Set<Shift> shifts = {
+        { Day::MONDAY, 9, 17, 100 },   // 8 hours
+        { Day::TUESDAY, 9, 18, 120 },  // 9 hours
+        { Day::WEDNESDAY, 8, 17, 110 } // 9 hours
+    };
+    EXPECT_EQUAL(highestValueScheduleFor(shifts, 7).size(), 0);
+}
 
 
 
