@@ -2,10 +2,62 @@
 #include "Combine.h"
 using namespace std;
 
+/*
+ * Helper function to merge two sorted sequences of DataPoints into a single
+ * sorted sequence.
+ */
+Vector<DataPoint> merge(const Vector<DataPoint>& seq1, const Vector<DataPoint>& seq2) {
+    Vector<DataPoint> result;
+    int i = 0; // Index for seq1
+    int j = 0; // Index for seq2
+
+    // While there are elements left in both sequences, take the smaller one.
+    while (i < seq1.size() && j < seq2.size()) {
+        if (seq1[i].weight <= seq2[j].weight) {
+            result.add(seq1[i]);
+            i++;
+        } else {
+            result.add(seq2[j]);
+            j++;
+        }
+    }
+
+    // Add any remaining elements from seq1.
+    while (i < seq1.size()) {
+        result.add(seq1[i]);
+        i++;
+    }
+
+    // Add any remaining elements from seq2.
+    while (j < seq2.size()) {
+        result.add(seq2[j]);
+        j++;
+    }
+
+    return result;
+}
+
 Vector<DataPoint> combine(const Vector<Vector<DataPoint>>& sequences) {
-    /* TODO: Delete the next few lines and implement this. */
-    (void) sequences;
-    return {};
+    // Base case: If there are no sequences, the result is empty.
+    if (sequences.isEmpty()) {
+        return {};
+    }
+    // Base case: If there is only one sequence, it's already the merged result.
+    if (sequences.size() == 1) {
+        return sequences[0];
+    }
+
+    // Recursive step: Split the sequences into two halves.
+    int mid = sequences.size() / 2;
+    Vector<Vector<DataPoint>> leftHalf = sequences.subList(0, mid);
+    Vector<Vector<DataPoint>> rightHalf = sequences.subList(mid);
+
+    // Recursively combine each half.
+    Vector<DataPoint> leftMerged = combine(leftHalf);
+    Vector<DataPoint> rightMerged = combine(rightHalf);
+
+    // Merge the two sorted results together.
+    return merge(leftMerged, rightMerged);
 }
 
 
