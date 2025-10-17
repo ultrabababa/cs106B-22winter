@@ -1,17 +1,112 @@
 #include "Matchmaker.h"
 using namespace std;
 
-bool hasPerfectMatching(const Map<string, Set<string>>& possibleLinks, Set<Pair>& matching) {
-    /* TODO: Delete this comment and these remaining lines, then implement this function. */
-    (void) possibleLinks;
-    (void) matching;
+bool hasPerfectMatchingRec(const Map<string, Set<string>>& possibleLinks,
+                           Set<string> people, Set<Pair>& matching) {
+
+    if (people.isEmpty()) {
+        return true;
+    }
+
+    string currPerson = people.first();
+    // add this person
+    people.remove(currPerson);
+    Set<string> neighbors = possibleLinks[currPerson];
+
+    for (string neiPerson : neighbors) {
+        if (people.contains(neiPerson)) {
+            // match currPerson and neiPerson
+            people.remove(neiPerson);
+            matching.add({currPerson, neiPerson});
+
+            if (hasPerfectMatchingRec(possibleLinks, people, matching)) {
+                return true;
+            }
+
+            // no perfect matching if we match neiPerson with currPerson
+            // try another neiPerson
+            people.add(neiPerson);
+            matching.remove({currPerson, neiPerson});
+        }
+    }
+
+    // currPerson can not be included in a perfect match
+    people.add(currPerson);
     return false;
 }
 
+bool hasPerfectMatching(const Map<string, Set<string>>& possibleLinks, Set<Pair>& matching) {
+    if (possibleLinks.size() % 2 != 0) {
+        return false;
+    }
+
+    Set<string> people;
+    for (const auto &p : possibleLinks.keys()) {
+        people.add(p);
+    }
+    return hasPerfectMatchingRec(possibleLinks, people, matching);
+}
+
+Set<Pair> maximumWeightMatchingRec(const Map<string, Map<string, int>>& possibleLinks,
+                                   Set<string> people, Map<Set<string>, Set<Pair>> memo) {
+
+    if (people.isEmpty()) {
+        return {};
+    }
+
+    if (memo.containsKey(people)) {
+        return memo[people];
+    }
+
+    string currPerson = people.first();
+    // 1. do not add this person
+    people.remove(currPerson);
+    Set<Pair> bestMatch = maximumWeightMatchingRec(possibleLinks, people, memo);
+    int maxWeight = 0;
+    for (const auto &pair : bestMatch) {
+        maxWeight += possibleLinks[pair.first()][pair.second()];
+    }
+
+    // 2. add this person
+    Map<string, int> neighbors = possibleLinks[currPerson];
+    for (const string &neiPerson : neighbors.keys()) {
+        if (people.contains(neiPerson)) {
+            if (neighbors[neiPerson] <= 0) {
+                continue;
+            }
+
+            // match currPerson and neiPerson
+            int currWeight = possibleLinks[currPerson][neiPerson];
+            people.remove(neiPerson);
+            Set<Pair> remainingMatch = maximumWeightMatchingRec(possibleLinks, people, memo);
+            int remainingWeight = 0;
+            for (const auto &p : remainingMatch) {
+                remainingWeight += possibleLinks[p.first()][p.second()];
+            }
+
+            if (currWeight + remainingWeight > maxWeight) {
+                maxWeight = currWeight + remainingWeight;
+                bestMatch = remainingMatch;
+                bestMatch.add({currPerson, neiPerson});
+            }
+
+            people.add(neiPerson);
+        }
+    }
+
+    memo.put(people, bestMatch);
+    people.add(currPerson);
+    return bestMatch;
+}
+
 Set<Pair> maximumWeightMatching(const Map<string, Map<string, int>>& possibleLinks) {
-    /* TODO: Delete this comment and these remaining lines, then implement this function. */
-    (void) possibleLinks;
-    return { };
+    Set<string> people;
+    for (const auto &p : possibleLinks.keys()) {
+        people.add(p);
+    }
+    /* each set of people, what's its best matching */
+    Map<Set<string>, Set<Pair>> memo;
+    return maximumWeightMatchingRec(possibleLinks, people, memo);
 }
 
 /* * * * * Test Cases Below This Point * * * * */

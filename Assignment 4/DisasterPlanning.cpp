@@ -1,17 +1,77 @@
 #include "DisasterPlanning.h"
 using namespace std;
 
-/* TODO: Refer to DisasterPlanning.h for more information about this function.
- * Then, delete this comment.
- */
+bool canBeMadeDisasterReadyRec(const Map<string, Set<string>>& roadNetwork,
+                               int numCities,
+                               Set<string>& uncoveredCities,
+                               Set<string>& supplyLocations) {
+    /* Base Case 1: 如果所有城市都已被覆盖，我们成功了。 */
+    if (uncoveredCities.isEmpty()) {
+        return true;
+    }
+    /* Base Case 2: 如果没有供应点可用，但仍有未覆盖的城市，此路不通。 */
+    if (numCities == 0) {
+        return false;
+    }
+
+    /* 启发式优化：选择一个最难覆盖的城市（邻居最少）来处理。
+     * 这有助于更快地进行剪枝。
+     */
+    string cityToCover;
+    int minNeighbor = roadNetwork.size() + 1;
+    for (const string& city : uncoveredCities) {
+        int neighborNum = roadNetwork[city].size();
+        if (neighborNum < minNeighbor) {
+            minNeighbor = neighborNum;
+            cityToCover = city;
+        }
+    }
+
+    /* 递归步骤：为了覆盖 cityToCover，我们必须在它本身或它的一个邻居放置供应点。
+     * 遍历这些选择。
+     */
+    Set<string> options = roadNetwork[cityToCover];
+    options.add(cityToCover);
+
+    for (const string& option : options) {
+        // 选择：在此处放置一个供应点
+        supplyLocations.add(option);
+        Set<string> newlyCovered;
+
+        // 找出因为这个新供应点而被覆盖的城市
+        for (const string& city : uncoveredCities) {
+            if (city == option || roadNetwork[option].contains(city)) {
+                newlyCovered.add(city);
+            }
+        }
+        Set<string> before = uncoveredCities;
+        uncoveredCities -= newlyCovered;
+
+        // 探索：递归地解决剩余的问题
+        if (canBeMadeDisasterReadyRec(roadNetwork, numCities - 1, uncoveredCities, supplyLocations)) {
+            return true;
+        }
+
+        // 回溯：撤销选择
+        supplyLocations.remove(option);
+        uncoveredCities = before;
+    }
+
+    return false;
+}
+
 bool canBeMadeDisasterReady(const Map<string, Set<string>>& roadNetwork,
                             int numCities,
                             Set<string>& supplyLocations) {
-    /* TODO: Delete the next few lines and implement this function. */
-    (void) roadNetwork;
-    (void) numCities;
-    (void) supplyLocations;
-    return false;
+    if (numCities < 0) {
+        error("numCities should be non-positive!");
+    }
+
+    Set<string> allCities;
+    for (const string& city : roadNetwork.keys()) {
+        allCities.add(city);
+    }
+    return canBeMadeDisasterReadyRec(roadNetwork, numCities, allCities, supplyLocations);
 }
 
 
